@@ -7,7 +7,35 @@ dynamodb = boto3.resource('dynamodb')
 
 
 def handle(event, context):
-    keyword = event['queryStringParameters']['q']
+    header = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "X-Requested-With, Origin, X-Csrftoken, Content-Type, Accept"
+    }
+
+    # get queryStringParameters
+    queryString = event['queryStringParameters']
+    if queryString is None:
+        response = {
+            "statusCode": 200,
+            'headers': header,
+            "body": json.dumps({
+                "message": "q parameter is required."
+            })
+        }
+        return response
+
+    # get q parameter
+    keyword = queryString['q']
+
+    if keyword is None:
+        response = {
+            "statusCode": 200,
+            'headers': header,
+            "body": json.dumps({
+                "message": "q parameter is required."
+            })
+        }
+        return response
 
     try:
         table = dynamodb.Table('PostalCode')
@@ -31,10 +59,7 @@ def handle(event, context):
 
         response = {
             "statusCode": 200,
-            'headers': {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "X-Requested-With, Origin, X-Csrftoken, Content-Type, Accept"
-            },
+            'headers': header,
             "body": json.dumps(body)
         }
         return response
@@ -42,10 +67,7 @@ def handle(event, context):
     except ClientError as e:
         response = {
             "statusCode": 200,
-            'headers': {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "X-Requested-With, Origin, X-Csrftoken, Content-Type, Accept"
-            },
+            'headers': header,
             "body": json.dumps({"message": e.response['Error']['Message']})
         }
         return response
